@@ -82,18 +82,30 @@ Setelah instalasi, gunakan akun berikut untuk testing:
 1. [Panduan Instalasi Server](docs/INSTALLATION.md)
 2. [Manual Penggunaan Administrator](docs/ADMIN_MANUAL.md)
 3. [Manual Penggunaan Guru](docs/TEACHER_MANUAL.md)
-4. [API Documentation](docs/API.md)
-5. [Troubleshooting](docs/TROUBLESHOOTING.md)
+4. [Docker Deployment Guide](docs/DOCKER.md)
+5. [API Documentation](docs/API.md)
+6. [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## 🚀 Quick Start
 
-### 1. Clone Repository
+### Option 1: Docker (Recommended)
 ```bash
-git clone <repository-url>
-cd sekune
+git clone https://github.com/Chievo4051/SuKuNe.git
+cd SuKuNe
+make install
 ```
 
-### 2. Setup Backend
+Akses aplikasi di http://localhost
+
+### Option 2: Manual Installation
+
+#### 1. Clone Repository
+```bash
+git clone https://github.com/Chievo4051/SuKuNe.git
+cd SuKuNe
+```
+
+#### 2. Setup Backend
 ```bash
 cd sekune_backend
 python -m venv venv
@@ -104,14 +116,14 @@ pip install -r requirements.txt
 python src/main.py
 ```
 
-### 3. Setup Frontend
+#### 3. Setup Frontend
 ```bash
 cd sekune_frontend
 npm install
 npm run dev
 ```
 
-### 4. Akses Aplikasi
+#### 4. Akses Aplikasi
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000
 

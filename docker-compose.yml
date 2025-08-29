@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./sekune_backend
+      dockerfile: Dockerfile
+    container_name: sekune_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+      - JWT_SECRET_KEY=your-super-secret-jwt-key-change-this-in-production
+      - JWT_ACCESS_TOKEN_EXPIRES=3600
+      - DATABASE_URL=sqlite:///sekune.db
+      - CORS_ORIGINS=http://localhost,http://localhost:80,http://localhost:3000
+    volumes:
+      - backend_data:/app/data
+      - backend_uploads:/app/src/static/uploads
+    networks:
+      - sekune_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./sekune_frontend
+      dockerfile: Dockerfile
+    container_name: sekune_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - sekune_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Database Service (PostgreSQL untuk production)
+  database:
+    image: postgres:15-alpine
+    container_name: sekune_database
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sekune_db
+      - POSTGRES_USER=sekune_user
+      - POSTGRES_PASSWORD=sekune_password_change_this
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sekune_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sekune_user -d sekune_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Service (untuk caching dan session)
+  redis:
+    image: redis:7-alpine
+    container_name: sekune_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password_change_this
+    volumes:
+      - redis_data:/data
+    networks:
+      - sekune_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Volumes
+volumes:
+  backend_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks
+networks:
+  sekune_network:
+    driver: bridge
+

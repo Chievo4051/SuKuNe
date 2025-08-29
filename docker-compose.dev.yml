@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Backend Development Service
+  backend-dev:
+    build:
+      context: ./sekune_backend
+      dockerfile: Dockerfile.dev
+    container_name: sekune_backend_dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=True
+      - JWT_SECRET_KEY=dev-secret-key-not-for-production
+      - JWT_ACCESS_TOKEN_EXPIRES=3600
+      - DATABASE_URL=sqlite:///sekune_dev.db
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    volumes:
+      - ./sekune_backend:/app
+      - backend_dev_data:/app/data
+    networks:
+      - sekune_dev_network
+    command: ["python", "src/main.py"]
+
+  # Frontend Development Service
+  frontend-dev:
+    build:
+      context: ./sekune_frontend
+      dockerfile: Dockerfile.dev
+    container_name: sekune_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:5000/api
+    volumes:
+      - ./sekune_frontend:/app
+      - /app/node_modules
+    networks:
+      - sekune_dev_network
+    command: ["pnpm", "run", "dev", "--host"]
+    depends_on:
+      - backend-dev
+
+  # Development Database (SQLite in volume)
+  database-dev:
+    image: alpine:latest
+    container_name: sekune_database_dev
+    volumes:
+      - dev_db_data:/data
+    networks:
+      - sekune_dev_network
+    command: ["tail", "-f", "/dev/null"]
+
+# Volumes
+volumes:
+  backend_dev_data:
+    driver: local
+  dev_db_data:
+    driver: local
+
+# Networks
+networks:
+  sekune_dev_network:
+    driver: bridge
+
